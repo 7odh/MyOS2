@@ -881,6 +881,22 @@ class MyOSViewModel(
     _uiState.update { it.copy(isFlipClockFullScreen = fullscreen) }
   }
 
+  fun setThemeMode(mode: com.example.model.ThemeMode) {
+    val updatedUser = _uiState.value.user.copy(themeMode = mode)
+    repository.updateUser(updatedUser)
+    _uiState.update { it.copy(user = updatedUser) }
+  }
+
+  fun toggleThemeMode() {
+    val currentMode = _uiState.value.user.themeMode
+    val nextMode = when (currentMode) {
+      com.example.model.ThemeMode.SYSTEM -> com.example.model.ThemeMode.DARK
+      com.example.model.ThemeMode.DARK -> com.example.model.ThemeMode.LIGHT
+      com.example.model.ThemeMode.LIGHT -> com.example.model.ThemeMode.SYSTEM
+    }
+    setThemeMode(nextMode)
+  }
+
   override fun onCleared() {
     super.onCleared()
     focusTimerJob?.cancel()

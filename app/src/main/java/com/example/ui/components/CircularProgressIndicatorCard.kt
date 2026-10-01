@@ -27,6 +27,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
@@ -37,10 +38,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.ui.theme.BorderLight
-import com.example.ui.theme.SurfaceCard
-import com.example.ui.theme.TextPrimary
-import com.example.ui.theme.TextSecondary
+import com.example.ui.theme.extraColors
 
 @Composable
 fun CircularProgressIndicatorCard(
@@ -55,22 +53,32 @@ fun CircularProgressIndicatorCard(
   trackColor: Color,
   modifier: Modifier = Modifier
 ) {
+  val extra = MaterialTheme.extraColors
+  val isDark = extra.isDark
+
   Card(
     modifier = modifier
+      .shadow(
+        elevation = if (isDark) 0.dp else 3.dp,
+        shape = RoundedCornerShape(20.dp),
+        ambientColor = extra.shadow,
+        spotColor = extra.shadow
+      )
       .clip(RoundedCornerShape(20.dp))
-      .border(1.dp, BorderLight.copy(alpha = 0.7f), RoundedCornerShape(20.dp)),
+      .border(1.dp, extra.border, RoundedCornerShape(20.dp)),
     shape = RoundedCornerShape(20.dp),
-    colors = CardDefaults.cardColors(containerColor = SurfaceCard),
-    elevation = CardDefaults.cardElevation(defaultElevation = 0.5.dp)
+    colors = CardDefaults.cardColors(containerColor = extra.cardSurface),
+    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
   ) {
     Column(
       modifier = Modifier
         .fillMaxWidth()
-        .padding(horizontal = 10.dp, vertical = 14.dp),
+        .background(extra.cardSurface)
+        .padding(horizontal = 8.dp, vertical = 14.dp),
       horizontalAlignment = Alignment.CenterHorizontally,
       verticalArrangement = Arrangement.SpaceBetween
     ) {
-      // Top icon badge
+      // Top icon badge in rounded circle
       Box(
         modifier = Modifier
           .size(32.dp)
@@ -88,7 +96,7 @@ fun CircularProgressIndicatorCard(
 
       Spacer(modifier = Modifier.height(4.dp))
 
-      // Category Title
+      // Category Title (Bold, colored)
       Text(
         text = title,
         style = MaterialTheme.typography.titleSmall.copy(
@@ -98,42 +106,38 @@ fun CircularProgressIndicatorCard(
         color = accentColor
       )
 
-      Spacer(modifier = Modifier.height(10.dp))
+      Spacer(modifier = Modifier.height(8.dp))
 
       // Circular Ring with Animated Progress
       CircularProgressRing(
         percentage = percentage,
         strokeColor = accentColor,
         trackColor = trackColor,
-        ringSize = 64.dp,
+        ringSize = 62.dp,
         strokeWidth = 6.dp
       )
 
       Spacer(modifier = Modifier.height(10.dp))
 
       // Completed / Total summary text
-      Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Center
-      ) {
-        Text(
-          text = "$completedCount / $totalCount",
-          style = MaterialTheme.typography.bodyMedium.copy(
-            fontWeight = FontWeight.Bold,
-            fontSize = 13.sp
-          ),
-          color = TextPrimary
-        )
-      }
+      Text(
+        text = "$completedCount / $totalCount",
+        style = MaterialTheme.typography.bodyMedium.copy(
+          fontWeight = FontWeight.Bold,
+          fontSize = 13.sp
+        ),
+        color = extra.textPrimary
+      )
+
       Text(
         text = "مكتملة",
         style = MaterialTheme.typography.bodySmall.copy(
-          fontSize = 10.sp
+          fontSize = 11.sp
         ),
-        color = TextSecondary
+        color = extra.textSecondary
       )
 
-      Spacer(modifier = Modifier.height(8.dp))
+      Spacer(modifier = Modifier.height(6.dp))
 
       // Remaining count
       Row(
@@ -146,7 +150,7 @@ fun CircularProgressIndicatorCard(
           style = MaterialTheme.typography.bodySmall.copy(
             fontSize = 11.sp
           ),
-          color = TextSecondary
+          color = extra.textSecondary
         )
         Text(
           text = "$remainingCount",
@@ -154,7 +158,7 @@ fun CircularProgressIndicatorCard(
             fontWeight = FontWeight.Bold,
             fontSize = 11.sp
           ),
-          color = TextPrimary
+          color = extra.textSecondary
         )
       }
     }
@@ -166,10 +170,11 @@ fun CircularProgressRing(
   percentage: Int,
   strokeColor: Color,
   trackColor: Color,
-  ringSize: Dp = 64.dp,
+  ringSize: Dp = 62.dp,
   strokeWidth: Dp = 6.dp,
   modifier: Modifier = Modifier
 ) {
+  val extra = MaterialTheme.extraColors
   val animatedProgress by animateFloatAsState(
     targetValue = (percentage.coerceIn(0, 100) / 100f),
     animationSpec = tween(durationMillis = 600, easing = FastOutSlowInEasing),
@@ -185,7 +190,7 @@ fun CircularProgressRing(
       val arcSize = Size(size.width - strokePx, size.height - strokePx)
       val topLeft = Offset(strokePx / 2f, strokePx / 2f)
 
-      // Draw background track
+      // Background track
       drawArc(
         color = trackColor,
         startAngle = -90f,
@@ -196,7 +201,7 @@ fun CircularProgressRing(
         style = Stroke(width = strokePx, cap = StrokeCap.Round)
       )
 
-      // Draw animated progress arc
+      // Animated progress arc
       val sweep = animatedProgress * 360f
       if (sweep > 0f) {
         drawArc(
@@ -217,7 +222,7 @@ fun CircularProgressRing(
         fontWeight = FontWeight.Bold,
         fontSize = 13.sp
       ),
-      color = TextPrimary
+      color = extra.textPrimary
     )
   }
 }

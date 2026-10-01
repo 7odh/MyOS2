@@ -27,8 +27,11 @@ import com.example.ui.screens.PlaceholderScreen
 import com.example.ui.screens.SearchScreen
 import com.example.ui.screens.TasksScreen
 import com.example.ui.theme.BackgroundLight
+import com.example.model.ThemeMode
 import com.example.ui.theme.MyApplicationTheme
 import com.example.viewmodel.MyOSViewModel
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material3.MaterialTheme
 
 class MainActivity : ComponentActivity() {
   private val viewModel: MyOSViewModel by viewModels()
@@ -37,12 +40,20 @@ class MainActivity : ComponentActivity() {
     super.onCreate(savedInstanceState)
     enableEdgeToEdge()
     setContent {
-      MyApplicationTheme {
+      val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+      val systemDark = isSystemInDarkTheme()
+      val isDark = when (uiState.user.themeMode) {
+        ThemeMode.SYSTEM -> systemDark
+        ThemeMode.DARK -> true
+        ThemeMode.LIGHT -> false
+      }
+
+      MyApplicationTheme(darkTheme = isDark) {
         // Enforce RTL layout direction to match the Arabic design specification
         CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
           Surface(
             modifier = Modifier.fillMaxSize(),
-            color = BackgroundLight
+            color = MaterialTheme.colorScheme.background
           ) {
             MyOSApp(viewModel = viewModel)
           }
@@ -116,7 +127,8 @@ fun MyOSApp(viewModel: MyOSViewModel) {
           onCloseCreateGoal = viewModel::closeCreateGoalSheet,
           onSaveGoalFull = viewModel::saveGoal,
           onCloseCreateHabit = viewModel::closeCreateHabitSheet,
-          onSaveHabitFull = viewModel::saveHabit
+          onSaveHabitFull = viewModel::saveHabit,
+          onThemeModeChanged = viewModel::setThemeMode
         )
       }
       ScreenDestination.CALENDAR -> {

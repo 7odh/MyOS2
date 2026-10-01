@@ -1,7 +1,7 @@
 package com.example.ui.components
 
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -9,19 +9,21 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.outlined.DarkMode
+import androidx.compose.material.icons.outlined.LightMode
+import androidx.compose.material.icons.outlined.SettingsBrightness
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -31,34 +33,32 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.model.ScreenDestination
-import com.example.ui.theme.BorderLight
-import com.example.ui.theme.BrightBlue
-import com.example.ui.theme.GoalBlueBg
-import com.example.ui.theme.SurfaceWhite
-import com.example.ui.theme.TextMuted
-import com.example.ui.theme.TextPrimary
-import com.example.ui.theme.TextSecondary
+import com.example.model.ThemeMode
+import com.example.ui.theme.BrandPrimary
+import com.example.ui.theme.extraColors
 
 @Composable
 fun NavigationDrawerContent(
   currentScreen: ScreenDestination,
   onScreenSelected: (ScreenDestination) -> Unit,
   onCloseDrawer: () -> Unit,
+  themeMode: ThemeMode = ThemeMode.SYSTEM,
+  onThemeModeChanged: (ThemeMode) -> Unit = {},
   modifier: Modifier = Modifier
 ) {
+  val extra = MaterialTheme.extraColors
+
   Column(
     modifier = modifier
       .fillMaxHeight()
-      .width(280.dp)
-      .background(SurfaceWhite)
+      .width(290.dp)
+      .background(extra.cardSurface)
       .statusBarsPadding()
       .navigationBarsPadding()
       .padding(horizontal = 16.dp, vertical = 12.dp)
@@ -83,14 +83,15 @@ fun NavigationDrawerContent(
               fontWeight = FontWeight.Bold,
               fontSize = 18.sp
             ),
-            color = TextPrimary
+            color = extra.textPrimary
           )
           Text(
             text = "عقلك الثاني",
             style = MaterialTheme.typography.bodySmall.copy(
-              fontSize = 10.sp
+              fontSize = 11.sp,
+              fontWeight = FontWeight.Bold
             ),
-            color = TextSecondary
+            color = BrandPrimary
           )
         }
       }
@@ -102,7 +103,7 @@ fun NavigationDrawerContent(
         Icon(
           imageVector = Icons.Default.Close,
           contentDescription = "إغلاق القائمة",
-          tint = TextSecondary,
+          tint = extra.textSecondary,
           modifier = Modifier.size(20.dp)
         )
       }
@@ -114,7 +115,6 @@ fun NavigationDrawerContent(
         .weight(1f)
         .verticalScroll(rememberScrollState())
     ) {
-      // Main destinations (Cleaned: removed inactive Projects and Knowledge; Search is now in top bar)
       val mainItems = listOf(
         ScreenDestination.HOME,
         ScreenDestination.GOALS,
@@ -139,32 +139,96 @@ fun NavigationDrawerContent(
         )
       }
 
-      Spacer(modifier = Modifier.height(10.dp))
-      HorizontalDivider(color = BorderLight.copy(alpha = 0.6f), thickness = 1.dp)
-      Spacer(modifier = Modifier.height(10.dp))
+      Spacer(modifier = Modifier.height(16.dp))
+      HorizontalDivider(color = extra.border, thickness = 1.dp)
+      Spacer(modifier = Modifier.height(14.dp))
 
-      // Bottom utility destinations
-      val bottomItems = listOf(
-        ScreenDestination.SETTINGS,
-        ScreenDestination.HELP
+      // Theme Mode Toggle (فاتح / داكن / تلقائي)
+      Text(
+        text = "مظهر التطبيق",
+        style = MaterialTheme.typography.labelSmall.copy(
+          fontWeight = FontWeight.Bold,
+          fontSize = 11.5.sp
+        ),
+        color = extra.textSecondary,
+        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
       )
 
-      bottomItems.forEach { destination ->
-        DrawerMenuItem(
-          title = destination.titleArabic,
-          icon = destination.icon,
-          isSelected = currentScreen == destination,
-          onClick = {
-            onScreenSelected(destination)
-            onCloseDrawer()
-          }
+      Spacer(modifier = Modifier.height(6.dp))
+
+      Row(
+        modifier = Modifier
+          .fillMaxWidth()
+          .clip(RoundedCornerShape(12.dp))
+          .background(extra.secondarySurface)
+          .border(1.dp, extra.border, RoundedCornerShape(12.dp))
+          .padding(4.dp),
+        horizontalArrangement = Arrangement.SpaceBetween
+      ) {
+        ThemeToggleChip(
+          title = "فاتح",
+          icon = Icons.Outlined.LightMode,
+          isSelected = themeMode == ThemeMode.LIGHT,
+          onClick = { onThemeModeChanged(ThemeMode.LIGHT) },
+          modifier = Modifier.weight(1f)
+        )
+        ThemeToggleChip(
+          title = "داكن",
+          icon = Icons.Outlined.DarkMode,
+          isSelected = themeMode == ThemeMode.DARK,
+          onClick = { onThemeModeChanged(ThemeMode.DARK) },
+          modifier = Modifier.weight(1f)
+        )
+        ThemeToggleChip(
+          title = "تلقائي",
+          icon = Icons.Outlined.SettingsBrightness,
+          isSelected = themeMode == ThemeMode.SYSTEM,
+          onClick = { onThemeModeChanged(ThemeMode.SYSTEM) },
+          modifier = Modifier.weight(1f)
         )
       }
 
       Spacer(modifier = Modifier.height(16.dp))
+    }
+  }
+}
 
-      // Bottom decorative motivational mountain card
-      BottomMountainCard()
+@Composable
+private fun ThemeToggleChip(
+  title: String,
+  icon: ImageVector,
+  isSelected: Boolean,
+  onClick: () -> Unit,
+  modifier: Modifier = Modifier
+) {
+  val extra = MaterialTheme.extraColors
+  Box(
+    modifier = modifier
+      .clip(RoundedCornerShape(8.dp))
+      .background(if (isSelected) BrandPrimary else Color.Transparent)
+      .clickable(onClick = onClick)
+      .padding(vertical = 6.dp),
+    contentAlignment = Alignment.Center
+  ) {
+    Row(
+      verticalAlignment = Alignment.CenterVertically,
+      horizontalArrangement = Arrangement.Center
+    ) {
+      Icon(
+        imageVector = icon,
+        contentDescription = title,
+        tint = if (isSelected) Color.White else extra.textSecondary,
+        modifier = Modifier.size(14.dp)
+      )
+      Spacer(modifier = Modifier.width(4.dp))
+      Text(
+        text = title,
+        style = MaterialTheme.typography.labelSmall.copy(
+          fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+          fontSize = 11.sp
+        ),
+        color = if (isSelected) Color.White else extra.textSecondary
+      )
     }
   }
 }
@@ -172,22 +236,22 @@ fun NavigationDrawerContent(
 @Composable
 private fun DrawerMenuItem(
   title: String,
-  icon: androidx.compose.ui.graphics.vector.ImageVector,
+  icon: ImageVector,
   isSelected: Boolean,
   onClick: () -> Unit,
   modifier: Modifier = Modifier
 ) {
-  val bgColor = if (isSelected) GoalBlueBg else Color.Transparent
-  val contentColor = if (isSelected) BrightBlue else TextPrimary
+  val extra = MaterialTheme.extraColors
+  val backgroundColor = if (isSelected) extra.secondarySurface else Color.Transparent
+  val contentColor = if (isSelected) BrandPrimary else extra.textPrimary
 
   Row(
     modifier = modifier
       .fillMaxWidth()
-      .padding(vertical = 2.dp)
       .clip(RoundedCornerShape(12.dp))
-      .background(bgColor)
+      .background(backgroundColor)
       .clickable(onClick = onClick)
-      .padding(horizontal = 14.dp, vertical = 10.dp),
+      .padding(horizontal = 12.dp, vertical = 10.dp),
     verticalAlignment = Alignment.CenterVertically
   ) {
     Icon(
@@ -196,7 +260,7 @@ private fun DrawerMenuItem(
       tint = contentColor,
       modifier = Modifier.size(20.dp)
     )
-    Spacer(modifier = Modifier.width(14.dp))
+    Spacer(modifier = Modifier.width(12.dp))
     Text(
       text = title,
       style = MaterialTheme.typography.bodyMedium.copy(
@@ -205,92 +269,5 @@ private fun DrawerMenuItem(
       ),
       color = contentColor
     )
-  }
-}
-
-@Composable
-private fun BottomMountainCard(modifier: Modifier = Modifier) {
-  Box(
-    modifier = modifier
-      .fillMaxWidth()
-      .height(100.dp)
-      .clip(RoundedCornerShape(16.dp))
-      .background(
-        brush = Brush.verticalGradient(
-          colors = listOf(
-            Color(0xFFF8FAFC),
-            Color(0xFFEFF6FF)
-          )
-        )
-      )
-  ) {
-    Canvas(modifier = Modifier.fillMaxSize()) {
-      val w = size.width
-      val h = size.height
-
-      // Soft mountain silhouette
-      val path = Path().apply {
-        moveTo(w * 0.1f, h)
-        lineTo(w * 0.35f, h * 0.45f)
-        lineTo(w * 0.65f, h)
-        close()
-      }
-      drawPath(
-        path = path,
-        color = Color(0xFFDBEAFE).copy(alpha = 0.6f)
-      )
-
-      val summitPath = Path().apply {
-        moveTo(w * 0.25f, h)
-        lineTo(w * 0.42f, h * 0.32f)
-        lineTo(w * 0.6f, h)
-        close()
-      }
-      drawPath(
-        path = summitPath,
-        color = Color(0xFF93C5FD).copy(alpha = 0.5f)
-      )
-
-      // Flag on summit
-      drawLine(
-        color = Color(0xFF1E293B),
-        start = Offset(w * 0.42f, h * 0.32f),
-        end = Offset(w * 0.42f, h * 0.20f),
-        strokeWidth = 1.5.dp.toPx()
-      )
-      val flag = Path().apply {
-        moveTo(w * 0.42f, h * 0.20f)
-        lineTo(w * 0.48f, h * 0.24f)
-        lineTo(w * 0.42f, h * 0.28f)
-        close()
-      }
-      drawPath(path = flag, color = Color(0xFFEF4444))
-    }
-
-    Column(
-      modifier = Modifier
-        .fillMaxSize()
-        .padding(12.dp),
-      horizontalAlignment = Alignment.End,
-      verticalArrangement = Arrangement.SpaceBetween
-    ) {
-      Text(
-        text = "\"رحلتك للأفضل\nتبدأ من هنا\"",
-        style = MaterialTheme.typography.bodySmall.copy(
-          fontSize = 11.sp,
-          fontWeight = FontWeight.Medium,
-          lineHeight = 15.sp
-        ),
-        color = TextSecondary
-      )
-      Text(
-        text = "MyOS",
-        style = MaterialTheme.typography.labelSmall.copy(
-          fontSize = 10.sp,
-          fontWeight = FontWeight.Bold
-        ),
-        color = TextMuted
-      )
-    }
   }
 }

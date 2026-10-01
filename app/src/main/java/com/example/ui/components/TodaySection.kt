@@ -6,6 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -19,7 +20,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.List
 import androidx.compose.material.icons.outlined.CheckBox
 import androidx.compose.material.icons.outlined.Spa
-import androidx.compose.material.icons.outlined.TrackChanges
+import androidx.compose.material.icons.outlined.Whatshot
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -34,6 +35,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -41,17 +43,11 @@ import androidx.compose.ui.unit.sp
 import com.example.model.Goal
 import com.example.model.Habit
 import com.example.model.Task
-import com.example.model.TaskSchedule
-import com.example.ui.theme.BorderLight
-import com.example.ui.theme.BrightBlue
+import com.example.ui.theme.BrandPrimary
 import com.example.ui.theme.GoalBlue
-import com.example.ui.theme.GoalBlueBg
 import com.example.ui.theme.HabitEmerald
-import com.example.ui.theme.HabitEmeraldBg
-import com.example.ui.theme.SurfaceCard
 import com.example.ui.theme.TaskViolet
-import com.example.ui.theme.TaskVioletBg
-import com.example.ui.theme.TextPrimary
+import com.example.ui.theme.extraColors
 
 @Composable
 fun TodaySection(
@@ -70,6 +66,9 @@ fun TodaySection(
   onNavigateToTasks: () -> Unit = {},
   modifier: Modifier = Modifier
 ) {
+  val extra = MaterialTheme.extraColors
+  val isDark = extra.isDark
+
   val todayDay = com.example.model.getCurrentDayOfWeekArabic()
   val todayScheduledHabits = habits.filter { it.isScheduledForToday(todayDay) }
   val displayHabits = if (isRestModeActive) {
@@ -78,15 +77,12 @@ fun TodaySection(
     todayScheduledHabits
   }
 
-  // Active goals: paused goals are shelved, 100% completed goals disappear, and only goals with tasks scheduled for TODAY are shown
   val activeGoals = goals.filter { !it.isPaused && it.progressPercentage < 100 && it.todayTasks.isNotEmpty() }
 
-  // Independent accordion state for each goal. By default, expand the first goal if available.
   var expandedGoalIds by remember(activeGoals.map { it.id }) {
     mutableStateOf(setOfNotNull(activeGoals.firstOrNull()?.id))
   }
 
-  // On the Home screen: ONLY general tasks scheduled for TODAY appear! Tasks without a date or for future days appear only in Tasks screen.
   val generalTasks = tasks.filter { !it.isGoalTask && it.isDueToday }
 
   Column(
@@ -94,9 +90,11 @@ fun TodaySection(
       .fillMaxWidth()
       .padding(horizontal = 16.dp, vertical = 6.dp)
   ) {
-    // Section Header: "عليك اليوم" and "عرض الكل"
+    // Section Header: "📋 عليك اليوم" and "عرض الكل"
     Row(
-      modifier = Modifier.fillMaxWidth(),
+      modifier = Modifier
+        .fillMaxWidth()
+        .padding(vertical = 4.dp),
       horizontalArrangement = Arrangement.SpaceBetween,
       verticalAlignment = Alignment.CenterVertically
     ) {
@@ -106,7 +104,7 @@ fun TodaySection(
         Icon(
           imageVector = Icons.AutoMirrored.Outlined.List,
           contentDescription = "عليك اليوم",
-          tint = BrightBlue,
+          tint = BrandPrimary,
           modifier = Modifier.size(22.dp)
         )
         Spacer(modifier = Modifier.width(6.dp))
@@ -116,44 +114,51 @@ fun TodaySection(
             fontWeight = FontWeight.Bold,
             fontSize = 17.sp
           ),
-          color = TextPrimary
+          color = extra.textPrimary
         )
       }
 
       TextButton(
         onClick = onViewAllClick,
-        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 8.dp, vertical = 4.dp)
+        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
       ) {
         Text(
           text = "عرض الكل",
           style = MaterialTheme.typography.labelMedium.copy(
-            fontWeight = FontWeight.SemiBold,
+            fontWeight = FontWeight.Bold,
             fontSize = 13.sp
           ),
-          color = BrightBlue
+          color = BrandPrimary
         )
       }
     }
 
     Spacer(modifier = Modifier.height(10.dp))
 
-    // 1. Habits Sub-Section (Conditional: hide if empty)
+    // 1. Habits Sub-Section Card
     if (displayHabits.isNotEmpty()) {
       Card(
         modifier = Modifier
           .fillMaxWidth()
-          .clip(RoundedCornerShape(20.dp))
-          .border(1.dp, BorderLight.copy(alpha = 0.7f), RoundedCornerShape(20.dp)),
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = SurfaceCard),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.5.dp)
+          .shadow(
+            elevation = if (isDark) 0.dp else 3.dp,
+            shape = RoundedCornerShape(22.dp),
+            ambientColor = extra.shadow,
+            spotColor = extra.shadow
+          )
+          .clip(RoundedCornerShape(22.dp))
+          .border(1.dp, extra.border, RoundedCornerShape(22.dp)),
+        shape = RoundedCornerShape(22.dp),
+        colors = CardDefaults.cardColors(containerColor = extra.cardSurface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
       ) {
         Column(
           modifier = Modifier
             .fillMaxWidth()
+            .background(extra.cardSurface)
             .padding(14.dp)
         ) {
-          // Habits Header Row (Clean header without hardcoded section-level priority badge)
+          // Habits Sub-Header Row matching mockup: "العادات 🌱" on right, "X من Y مكتملة" on left
           Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -164,9 +169,9 @@ fun TodaySection(
             ) {
               Box(
                 modifier = Modifier
-                  .size(26.dp)
+                  .size(28.dp)
                   .clip(CircleShape)
-                  .background(HabitEmeraldBg),
+                  .background(extra.habitBg),
                 contentAlignment = Alignment.Center
               ) {
                 Icon(
@@ -181,7 +186,7 @@ fun TodaySection(
                 text = "العادات",
                 style = MaterialTheme.typography.titleSmall.copy(
                   fontWeight = FontWeight.Bold,
-                  fontSize = 14.sp
+                  fontSize = 15.sp
                 ),
                 color = HabitEmerald
               )
@@ -189,9 +194,9 @@ fun TodaySection(
 
             Text(
               text = "${displayHabits.count { it.isCompleted }} من ${displayHabits.size} مكتملة",
-              style = MaterialTheme.typography.labelSmall.copy(
-                fontWeight = FontWeight.Medium,
-                fontSize = 11.sp
+              style = MaterialTheme.typography.labelMedium.copy(
+                fontWeight = FontWeight.Bold,
+                fontSize = 12.sp
               ),
               color = HabitEmerald
             )
@@ -203,20 +208,20 @@ fun TodaySection(
               modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(10.dp))
-                .background(Color(0xFFFEF3C7))
+                .background(if (isDark) Color(0xFF451A03).copy(alpha = 0.6f) else Color(0xFFFEF3C7))
                 .padding(horizontal = 10.dp, vertical = 6.dp)
             ) {
               Text(
                 text = "وضع الراحة مفعّل: تظهر العادات الإجبارية فقط، وبقية العادات في استراحة مستحقة ☕",
-                style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
-                color = Color(0xFFB45309)
+                style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.5.sp),
+                color = if (isDark) Color(0xFFFDE68A) else Color(0xFFB45309)
               )
             }
           }
 
           Spacer(modifier = Modifier.height(10.dp))
 
-          // Habits list with rich interaction (Counter, Quantity, Duration, Boolean)
+          // Habits list
           displayHabits.forEach { habit ->
             HabitItemRow(
               habit = habit,
@@ -232,20 +237,27 @@ fun TodaySection(
       Spacer(modifier = Modifier.height(12.dp))
     }
 
-    // 2. General Tasks Sub-Section (Conditional: hide if empty, clean header without section priority)
+    // 2. General Tasks Sub-Section Card
     if (generalTasks.isNotEmpty()) {
       Card(
         modifier = Modifier
           .fillMaxWidth()
-          .clip(RoundedCornerShape(20.dp))
-          .border(1.dp, BorderLight.copy(alpha = 0.7f), RoundedCornerShape(20.dp)),
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = SurfaceCard),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.5.dp)
+          .shadow(
+            elevation = if (isDark) 0.dp else 3.dp,
+            shape = RoundedCornerShape(22.dp),
+            ambientColor = extra.shadow,
+            spotColor = extra.shadow
+          )
+          .clip(RoundedCornerShape(22.dp))
+          .border(1.dp, extra.border, RoundedCornerShape(22.dp)),
+        shape = RoundedCornerShape(22.dp),
+        colors = CardDefaults.cardColors(containerColor = extra.cardSurface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
       ) {
         Column(
           modifier = Modifier
             .fillMaxWidth()
+            .background(extra.cardSurface)
             .padding(14.dp)
         ) {
           // Tasks Header Row
@@ -261,9 +273,9 @@ fun TodaySection(
             ) {
               Box(
                 modifier = Modifier
-                  .size(26.dp)
+                  .size(28.dp)
                   .clip(CircleShape)
-                  .background(TaskVioletBg),
+                  .background(extra.taskBg),
                 contentAlignment = Alignment.Center
               ) {
                 Icon(
@@ -278,7 +290,7 @@ fun TodaySection(
                 text = "المهام المستحقة اليوم",
                 style = MaterialTheme.typography.titleSmall.copy(
                   fontWeight = FontWeight.Bold,
-                  fontSize = 14.sp
+                  fontSize = 15.sp
                 ),
                 color = TaskViolet
               )
@@ -286,9 +298,9 @@ fun TodaySection(
 
             Text(
               text = "${generalTasks.count { it.isCompleted }} من ${generalTasks.size} مكتملة  ←",
-              style = MaterialTheme.typography.labelSmall.copy(
-                fontWeight = FontWeight.Medium,
-                fontSize = 11.sp
+              style = MaterialTheme.typography.labelMedium.copy(
+                fontWeight = FontWeight.Bold,
+                fontSize = 12.sp
               ),
               color = TaskViolet
             )
@@ -296,7 +308,6 @@ fun TodaySection(
 
           Spacer(modifier = Modifier.height(10.dp))
 
-          // Display uncompleted first, then sorted by priority (High -> Medium -> Low -> None)
           val displayTasks = generalTasks
             .sortedWith(
               compareBy<Task> { it.isCompleted }
@@ -310,7 +321,7 @@ fun TodaySection(
               onToggle = { onToggleTask(task.id) },
               onPostpone = { onPostponeTask(task.id) }
             )
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(6.dp))
           }
         }
       }
@@ -318,23 +329,29 @@ fun TodaySection(
       Spacer(modifier = Modifier.height(12.dp))
     }
 
-    // 3. Goals Sub-Section (Expandable Accordion Items, clean header without section priority)
+    // 3. Goals Sub-Section Card
     if (activeGoals.isNotEmpty()) {
       Card(
         modifier = Modifier
           .fillMaxWidth()
-          .clip(RoundedCornerShape(20.dp))
-          .border(1.dp, BorderLight.copy(alpha = 0.7f), RoundedCornerShape(20.dp)),
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = SurfaceCard),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.5.dp)
+          .shadow(
+            elevation = if (isDark) 0.dp else 3.dp,
+            shape = RoundedCornerShape(22.dp),
+            ambientColor = extra.shadow,
+            spotColor = extra.shadow
+          )
+          .clip(RoundedCornerShape(22.dp))
+          .border(1.dp, extra.border, RoundedCornerShape(22.dp)),
+        shape = RoundedCornerShape(22.dp),
+        colors = CardDefaults.cardColors(containerColor = extra.cardSurface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
       ) {
         Column(
           modifier = Modifier
             .fillMaxWidth()
+            .background(extra.cardSurface)
             .padding(14.dp)
         ) {
-          // Goals Header Row
           Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -345,13 +362,13 @@ fun TodaySection(
             ) {
               Box(
                 modifier = Modifier
-                  .size(26.dp)
+                  .size(28.dp)
                   .clip(CircleShape)
-                  .background(GoalBlueBg),
+                  .background(extra.goalBg),
                 contentAlignment = Alignment.Center
               ) {
                 Icon(
-                  imageVector = Icons.Outlined.TrackChanges,
+                  imageVector = Icons.Outlined.Whatshot,
                   contentDescription = "الأهداف",
                   tint = GoalBlue,
                   modifier = Modifier.size(16.dp)
@@ -362,7 +379,7 @@ fun TodaySection(
                 text = "الأهداف",
                 style = MaterialTheme.typography.titleSmall.copy(
                   fontWeight = FontWeight.Bold,
-                  fontSize = 14.sp
+                  fontSize = 15.sp
                 ),
                 color = GoalBlue
               )
@@ -370,9 +387,9 @@ fun TodaySection(
 
             Text(
               text = "${activeGoals.size} أهداف نشطة",
-              style = MaterialTheme.typography.labelSmall.copy(
-                fontWeight = FontWeight.Medium,
-                fontSize = 11.sp
+              style = MaterialTheme.typography.labelMedium.copy(
+                fontWeight = FontWeight.Bold,
+                fontSize = 12.sp
               ),
               color = GoalBlue
             )
@@ -380,7 +397,6 @@ fun TodaySection(
 
           Spacer(modifier = Modifier.height(12.dp))
 
-          // List of Expandable Goal Accordions
           activeGoals.forEach { goal ->
             val isExpanded = expandedGoalIds.contains(goal.id)
             GoalAccordionItem(

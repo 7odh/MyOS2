@@ -7,18 +7,12 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.FloatingActionButtonDefaults
-import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.Scaffold
@@ -31,9 +25,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.example.model.DayOfWeekArabic
 import com.example.model.Habit
@@ -56,12 +47,6 @@ import com.example.ui.components.NavigationDrawerContent
 import com.example.ui.components.QuickAddBottomSheet
 import com.example.ui.components.TodaySection
 import com.example.ui.components.WelcomeCard
-import com.example.ui.theme.BackgroundLight
-import com.example.ui.theme.BrightBlue
-import com.example.ui.theme.DeepBlue
-import com.example.ui.theme.ElectricViolet
-import com.example.ui.theme.SurfaceWhite
-import com.example.ui.theme.TextWhite
 import com.example.viewmodel.MyOSUiState
 import kotlinx.coroutines.launch
 
@@ -119,6 +104,7 @@ fun HomeScreen(
     priority: Priority,
     iconEmoji: String
   ) -> Unit = { _, _, _, _, _, _, _, _, _ -> },
+  onThemeModeChanged: (com.example.model.ThemeMode) -> Unit = {},
   modifier: Modifier = Modifier
 ) {
   val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
@@ -136,14 +122,16 @@ fun HomeScreen(
     drawerState = drawerState,
     drawerContent = {
       ModalDrawerSheet(
-        drawerContainerColor = SurfaceWhite
+        drawerContainerColor = MaterialTheme.colorScheme.surface
       ) {
         NavigationDrawerContent(
           currentScreen = uiState.currentScreen,
           onScreenSelected = onScreenSelected,
           onCloseDrawer = {
             scope.launch { drawerState.close() }
-          }
+          },
+          themeMode = uiState.user.themeMode,
+          onThemeModeChanged = onThemeModeChanged
         )
       }
     }
@@ -165,46 +153,17 @@ fun HomeScreen(
         MyOSBottomNavigationBar(
           currentScreen = uiState.currentScreen,
           onTabSelected = onScreenSelected,
-          onMoreClick = {
-            scope.launch { drawerState.open() }
-          }
+          onAddClick = onOpenQuickAdd
         )
       },
-      floatingActionButton = {
-        FloatingActionButton(
-          onClick = onOpenQuickAdd,
-          shape = CircleShape,
-          containerColor = Color.Transparent,
-          elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 6.dp),
-          modifier = Modifier
-            .size(56.dp)
-            .shadow(6.dp, CircleShape)
-            .background(
-              brush = Brush.linearGradient(
-                colors = listOf(
-                  BrightBlue,
-                  DeepBlue,
-                  ElectricViolet
-                )
-              ),
-              shape = CircleShape
-            )
-        ) {
-          Icon(
-            imageVector = Icons.Default.Add,
-            contentDescription = "إضافة سريعة",
-            tint = TextWhite,
-            modifier = Modifier.size(28.dp)
-          )
-        }
-      },
       snackbarHost = { SnackbarHost(snackbarHostState) },
-      containerColor = BackgroundLight,
+      containerColor = MaterialTheme.colorScheme.background,
       modifier = modifier
     ) { innerPadding ->
       Box(
         modifier = Modifier
           .fillMaxSize()
+          .background(MaterialTheme.colorScheme.background)
           .padding(innerPadding),
         contentAlignment = Alignment.TopCenter
       ) {
@@ -215,7 +174,7 @@ fun HomeScreen(
             .verticalScroll(rememberScrollState()),
           horizontalAlignment = Alignment.CenterHorizontally
         ) {
-          // 1. Welcome Card
+          // 1. Welcome Card with Mountain Summit Illustration
           WelcomeCard(
             userName = uiState.user.name,
             motivationalSentence = uiState.user.motivationalSentence,
@@ -223,9 +182,9 @@ fun HomeScreen(
             onEditNameClick = onEditNameClick
           )
 
-          Spacer(modifier = Modifier.height(4.dp))
+          Spacer(modifier = Modifier.height(2.dp))
 
-          // 2. Daily Analytics Summary Section
+          // 2. Date Row & Daily Analytics Summary Section (3 Metric Cards)
           DailySummarySection(
             analytics = uiState.dailyAnalytics,
             onNavigateToAnalytics = {
@@ -256,7 +215,7 @@ fun HomeScreen(
             }
           )
 
-          Spacer(modifier = Modifier.height(32.dp))
+          Spacer(modifier = Modifier.height(48.dp))
         }
       }
     }

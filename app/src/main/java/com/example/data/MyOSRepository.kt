@@ -32,7 +32,7 @@ class MyOSRepository {
   private val _user = MutableStateFlow(
     User(
       name = "أحمد",
-      motivationalSentence = "كل يوم فرصة جديدة لتكون أفضل من أمس.",
+      motivationalSentence = "النجاح هو مجموع قرارات وانضباطات صغيرة.",
       isMotivationEnabled = true,
       isRestModeActive = false
     )
@@ -506,6 +506,10 @@ class MyOSRepository {
 
   fun updateMotivationalSentence(sentence: String) {
     _user.update { it.copy(motivationalSentence = sentence) }
+  }
+
+  fun updateUser(updatedUser: User) {
+    _user.value = updatedUser
   }
 
   fun incrementHabit(habitId: String) {
