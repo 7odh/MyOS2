@@ -1,0 +1,6 @@
+{
+  "name": "MyOS",
+  "description": "نظام إدارة الحياة الشخصية والعقل الثاني - لوحة التحكم اليومية والعادات والأهداف والمهام",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
